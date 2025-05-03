@@ -80,13 +80,6 @@ jobs:
               # Build with Ninja
               ninja -C \$build_path && ninja -C \$build_path install
 
-              # Mark the build as portable
-              touch \$out_path/bin/portable.txt
-              mv \$out_path/share/dolphin-emu \$out_path
-              mv \$out_path/dolphin-emu/sys \$out_path/dolphin-emu/Sys # Case sensitivity fix for installation
-              mv \$out_path/bin/* \$out_path/dolphin-emu/
-              rmdir \$out_path/bin
-
               # Copy built files to the emulator path
               cp -r "$build_path/assets" "$out_path"
               cp "$build_path/PPSSPPSDL" "$out_path"
