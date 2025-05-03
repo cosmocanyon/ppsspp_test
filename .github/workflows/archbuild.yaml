@@ -1,0 +1,100 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build ppsspp for x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Git submodules
+        id: cache-submodules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./.git/modules        
+            ./ext
+          key: ${{ runner.os }}-ppsspp-submodules-${{ hashFiles('**/.gitmodules') }}
+          restore-keys: |
+            ${{ runner.os }}-ppsspp-submodules-
+
+      - name: Initialize and update submodules
+        if: steps.cache-submodules.outputs.cache-hit != 'true'
+        run: |
+          git submodule update --init --recursive
+
+      - name: Cache ccache directory
+        id: cache-ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '**/*.cpp', '**/*.h') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Docker for Arch
+        run: |
+          docker pull archlinux:base-devel
+          docker run --rm \
+            -v $GITHUB_WORKSPACE:/workspace \
+            -v $GITHUB_WORKSPACE/.ccache:/workspace/.ccache \
+            -w /workspace \
+            -e CCACHE_DIR=/workspace/.ccache \
+            archlinux:base-devel bash -c "
+            
+              # Update and install necessary packages
+              pacman -Syu --noconfirm && pacman -S --noconfirm \
+                cmake ccache ninja
+              
+              # Set up build and output directories
+              build_path='./build'
+              out_path='./out'
+              mkdir -p \$build_path \$out_path
+
+              # Run cmake configuration
+              cmake -S . -B \$build_path \
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER=clang \
+                -DCMAKE_CXX_COMPILER=clang++ \
+                -DENABLE_WAYLAND=OFF \
+                -DX86_64=ON \
+                -DUSE_DISCORD=OFF \
+                -DUSE_WAYLAND_WSI=OFF \
+                -DBUILD_TESTING=false \
+                -DENABLE_CTEST=false \
+                -DUSING_QT_UI=false \
+                -DX86=false \
+                -DBUILD_EXTERNAL=true \
+                -GNinja
+
+              # Build with Ninja
+              ninja -C \$build_path && ninja -C \$build_path install
+
+              # Mark the build as portable
+              touch \$out_path/bin/portable.txt
+              mv \$out_path/share/dolphin-emu \$out_path
+              mv \$out_path/dolphin-emu/sys \$out_path/dolphin-emu/Sys # Case sensitivity fix for installation
+              mv \$out_path/bin/* \$out_path/dolphin-emu/
+              rmdir \$out_path/bin
+
+              # Copy built files to the emulator path
+              cp -r "$build_path/assets" "$out_path"
+              cp "$build_path/PPSSPPSDL" "$out_path"
+              
+            "
+            
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppsspp-artifact
+          path: ./out/
