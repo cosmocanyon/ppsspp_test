@@ -53,7 +53,7 @@ jobs:
             
               # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ccache ninja
+                cmake ccache ninja clang
               
               # Set up build and output directories
               build_path='./build'
