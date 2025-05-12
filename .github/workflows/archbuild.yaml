@@ -53,7 +53,7 @@ jobs:
             
               # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ccache ninja clang
+                cmake ccache ninja clang fontconfig gcc-libs glew glibc hicolor-icon-theme libgl libpng libzip miniupnpc openxr qt5-base qt5-multimedia sdl2 sdl2_ttf snappy zlib zstd git glew glu libglvnd libpng libzip openxr python qt5-tools
               
               # Set up build and output directories
               build_path='./build'
@@ -69,7 +69,6 @@ jobs:
                 -DENABLE_WAYLAND=OFF \
                 -DX86_64=ON \
                 -DUSE_DISCORD=OFF \
-                -DUSE_WAYLAND_WSI=OFF \
                 -DBUILD_TESTING=false \
                 -DENABLE_CTEST=false \
                 -DUSING_QT_UI=false \
