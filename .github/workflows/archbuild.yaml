@@ -71,7 +71,7 @@ jobs:
                 -DUSE_DISCORD=OFF \
                 -DBUILD_TESTING=false \
                 -DENABLE_CTEST=false \
-                -DUSING_QT_UI=true \
+                -DUSING_QT_UI=false \
                 -DX86=false \
                 -DBUILD_EXTERNAL=true \
                 -GNinja
