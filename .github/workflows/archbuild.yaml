@@ -73,7 +73,7 @@ jobs:
                 -DENABLE_CTEST=false \
                 -DUSING_QT_UI=false \
                 -DX86=false \
-                -DBUILD_EXTERNAL=true \
+                -DBUILD_EXTERNAL=false \
                 -GNinja
 
               # Build with Ninja
